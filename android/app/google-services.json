@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "955382723349",
+    "project_id": "lokaverkefni-957d8",
+    "storage_bucket": "lokaverkefni-957d8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:955382723349:android:75b4301250f84e36f32f1c",
+        "android_client_info": {
+          "package_name": "com.example.calorie_counter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCpqkeHxiiocSSrv0Z7WmExXTSOAVBHetE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
