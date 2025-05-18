@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'email.login.screen.dart';
-
+import 'signup.dart';
+import 'login_form_screen.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -42,7 +42,12 @@ class LoginScreen extends StatelessWidget {
                     Column(
                       children: [
                         ElevatedButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const LoginFormScreen()),
+                            );
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue,
                             foregroundColor: Colors.white,
@@ -56,7 +61,7 @@ class LoginScreen extends StatelessWidget {
                           onPressed: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const EmailLoginScreen()),
+                              MaterialPageRoute(builder: (context) => const SignupScreen()),
                             );
                           },
                           style: ElevatedButton.styleFrom(

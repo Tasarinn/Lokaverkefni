@@ -1,38 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'home_screen.dart';
 
-class EmailLoginScreen extends StatefulWidget {
-  const EmailLoginScreen({super.key});
+class LoginFormScreen extends StatefulWidget {
+  const LoginFormScreen({super.key});
 
   @override
-  State<EmailLoginScreen> createState() => _EmailLoginScreenState();
+  State<LoginFormScreen> createState() => _LoginFormScreenState();
 }
 
-class _EmailLoginScreenState extends State<EmailLoginScreen> {
+class _LoginFormScreenState extends State<LoginFormScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   String errorMessage = '';
   bool isLoading = false;
 
-  Future<void> registerUser() async {
+  Future<void> loginUser() async {
     setState(() {
       isLoading = true;
       errorMessage = '';
     });
 
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
 
-      // ✅ Success
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Account created successfully!')),
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
     } on FirebaseAuthException catch (e) {
       setState(() {
-        errorMessage = e.message ?? 'Registration failed';
+        errorMessage = e.message ?? 'Login failed';
       });
     } finally {
       setState(() => isLoading = false);
@@ -45,8 +46,6 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Container(
-          width: double.infinity,
-          height: double.infinity,
           margin: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             border: Border.all(color: Colors.blue, width: 3),
@@ -56,7 +55,17 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
             child: Column(
               children: [
-                const SizedBox(height: 20),
+                // 🔙 Back button
+                Align(
+                  alignment: Alignment.topLeft,
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.blue),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  ),
+                ),
+
                 const Text(
                   'Kaldi',
                   style: TextStyle(
@@ -65,9 +74,9 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                     color: Colors.blue,
                   ),
                 ),
+
                 const Spacer(),
 
-                // Email and Password fields
                 TextField(
                   controller: emailController,
                   decoration: const InputDecoration(
@@ -86,34 +95,28 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // Login button
                 isLoading
                     ? const CircularProgressIndicator()
                     : ElevatedButton(
-                  onPressed: registerUser,
+                  onPressed: loginUser,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 64, vertical: 20),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text('Log in', style: TextStyle(fontSize: 18)),
+                  child: const Text('Innskrá', style: TextStyle(fontSize: 18)),
                 ),
 
-                // Error message
                 if (errorMessage.isNotEmpty) ...[
                   const SizedBox(height: 12),
-                  Text(
-                    errorMessage,
-                    style: const TextStyle(color: Colors.red),
-                  ),
+                  Text(errorMessage, style: const TextStyle(color: Colors.red)),
                 ],
 
                 const Spacer(),
                 const Text(
-                  '“Þú ert aðeins nokkrum nálum af testa frá Ronnie Coleman 2001”',
+                  '“Það er ekkert ókeypis í þessu lífi sykurpúði”',
                   style: TextStyle(fontSize: 14, color: Colors.grey),
-                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 10),
               ],
