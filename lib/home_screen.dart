@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:calorie_counter/goal_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:calorie_counter/add_food_screen.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -133,6 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   double quoteOpacity = 0.0;
 
+
   void _showQuoteOverlay() {
     final random = Random();
     setState(() {
@@ -248,55 +250,53 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
 
                     const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Column(
-                          children: const [
-                            Text('Prótein'),
-                            Text('0g / 0g', style: TextStyle(fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                        Column(
-                          children: const [
-                            Text('Kolvetni'),
-                            Text('0g / 0g', style: TextStyle(fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                        Column(
-                          children: const [
-                            Text('Fita'),
-                            Text('0g / 0g', style: TextStyle(fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    const Text('Prótein: 0g / 0g'),
-                    const Text('Kolvetni: 0g / 0g'),
-                    const Text('Fita: 0g / 0g'),
-
                     const Spacer(),
-
-                    // Add food button
+                      // Add food button
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                          // TODO: Add food screen
+                          showModalBottomSheet(
+                            context: context,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                            ),
+                            builder: (context) => Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ListTile(
+                                  leading: const Icon(Icons.search),
+                                  title: const Text('Bæta við vöru'),
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    // TODO: Open Krónan product screen
+                                  },
+                                ),
+                                ListTile(
+                                  leading: const Icon(Icons.rice_bowl),
+                                  title: const Text('Bæta við mat'),
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const AddFoodScreen()),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 18),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                         child: const Text('Bæta við mat', style: TextStyle(fontSize: 18)),
                       ),
-                    ),
-                  ],
+                    )
+                  ]
                 ),
               ),
             ),
