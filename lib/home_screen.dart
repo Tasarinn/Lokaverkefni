@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'dart:math';
+import 'package:calorie_counter/goal_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -14,7 +17,14 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool showQuote = false;
-  void _handleMenu(String value) {
+  int calorieGoal = 0;
+  int proteinGoal = 0;
+  int carbGoal = 0;
+  int fatGoal = 0;
+
+  bool loadingGoals = true;
+
+  void _handleMenu(String value) async {
     switch (value) {
       case 'logout':
         FirebaseAuth.instance.signOut();
@@ -24,10 +34,49 @@ class _HomeScreenState extends State<HomeScreen> {
         _showQuoteOverlay();
         break;
       case 'goals':
-      // TODO: Navigate to the goal editing screen
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const GoalScreen()),
+        );
+
+        if (result == true) {
+          _loadGoals();
+        }
         break;
+
     }
   }
+  @override
+  void initState() {
+    super.initState();
+    _loadGoals();
+  }
+
+  void _loadGoals() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final doc = await FirebaseFirestore.instance
+        .collection('goals')
+        .doc(user.uid)
+        .get();
+
+    if (doc.exists) {
+      final data = doc.data()!;
+      setState(() {
+        calorieGoal = data['calories'] ?? 0;
+        proteinGoal = data['protein'] ?? 0;
+        carbGoal = data['carbs'] ?? 0;
+        fatGoal = data['fat'] ?? 0;
+        loadingGoals = false;
+      });
+    } else {
+      setState(() {
+        loadingGoals = false;
+      });
+    }
+  }
+
   final List<String> quotes = [
     "Everybody wants to be a bodybuilder, but don’t nobody wanna lift no heavy-ass weight. – Ronnie Coleman",
     "Yeah buddy! Light weight baby! – Ronnie Coleman",
@@ -103,6 +152,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (loadingGoals) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
     final user = FirebaseAuth.instance.currentUser;
 
     return Stack(
@@ -142,20 +199,54 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 40),
 
-                    // Placeholder for ring animation
-                    CircularPercentIndicator(
-                      radius: 120.0,
-                      lineWidth: 16.0,
-                      percent: 0.0, // 0/0 = 0%
-                      center: const Text(
-                        "0 / 0\nkcal",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    if (loadingGoals)
+                      const CircularProgressIndicator()
+                    else
+                      Column(
+                        children: [
+                          CircularPercentIndicator(
+                            radius: 120.0,
+                            lineWidth: 16.0,
+                            percent: 0.0, // still placeholder for calories consumed / goal
+                            center: Text(
+                              "0 / $calorieGoal\nkcal",
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            progressColor: Colors.blue,
+                            backgroundColor: Colors.grey[300]!,
+                            circularStrokeCap: CircularStrokeCap.round,
+                          ),
+                          const SizedBox(height: 20),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Column(
+                                children: [
+                                  const Text('Prótein'),
+                                  Text('0g / $proteinGoal',
+                                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                              Column(
+                                children: [
+                                  const Text('Kolvetni'),
+                                  Text('0g / $carbGoal',
+                                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                              Column(
+                                children: [
+                                  const Text('Fita'),
+                                  Text('0g / $fatGoal',
+                                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                      progressColor: Colors.blue,
-                      backgroundColor: Colors.grey[300]!,
-                      circularStrokeCap: CircularStrokeCap.round,
-                    ),
+
                     const SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
