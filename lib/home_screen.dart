@@ -5,6 +5,8 @@ import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'dart:math';
 import 'package:calorie_counter/add_food_screen.dart';
 import 'package:calorie_counter/goal_screen.dart';
+import 'package:calorie_counter/past_day_screen.dart';
+import 'package:calorie_counter/notification_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,6 +30,9 @@ class _HomeScreenState extends State<HomeScreen> {
   int carbGoal = 0;
   int fatGoal = 0;
 
+  double currentWeight = 0.0;
+  double targetWeight = 0.0;
+
   bool loadingGoals = true;
 
   final List<String> quotes = [
@@ -50,6 +55,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    NotificationService().initialize().then((_) {
+      NotificationService().scheduleDailyNotification();
+    });
     _loadGoals();
     _loadTodaysTotals();
   }
@@ -67,6 +75,8 @@ class _HomeScreenState extends State<HomeScreen> {
         proteinGoal = data['protein'] ?? 0;
         carbGoal = data['carbs'] ?? 0;
         fatGoal = data['fat'] ?? 0;
+        currentWeight = (data['currentWeight'] ?? 0).toDouble();
+        targetWeight = (data['targetWeight'] ?? 0).toDouble();
         loadingGoals = false;
       });
     } else {
@@ -125,12 +135,66 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _logout() async {
+    await FirebaseAuth.instance.signOut();
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
         Scaffold(
           backgroundColor: Colors.white,
+          endDrawer: Drawer(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                const DrawerHeader(
+                  decoration: BoxDecoration(color: Colors.blue),
+                  child: Text('Kaldi Menu', style: TextStyle(color: Colors.white, fontSize: 24)),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.flag),
+                  title: const Text('Markmið'),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    final updated = await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const GoalScreen()),
+                    );
+                    if (updated == true) {
+                      _loadGoals();
+                    }
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.format_quote),
+                  title: const Text('Quote'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showQuoteOverlay();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.history),
+                  title: const Text('Skoða fyrri daga'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const PastDayScreen()),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.logout),
+                  title: const Text('Útskráning'),
+                  onTap: _logout,
+                ),
+              ],
+            ),
+          ),
           body: SafeArea(
             child: Container(
               margin: const EdgeInsets.all(12),
@@ -150,16 +214,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           'Kaldi',
                           style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.blue),
                         ),
-                        PopupMenuButton<String>(
-                          onSelected: (value) {
-                            if (value == 'quote') {
-                              _showQuoteOverlay();
-                            }
-                          },
-                          icon: const Icon(Icons.menu, color: Colors.blue),
-                          itemBuilder: (context) => [
-                            const PopupMenuItem(value: 'quote', child: Text('Quote')),
-                          ],
+                        Builder(
+                          builder: (context) => IconButton(
+                            icon: const Icon(Icons.menu, color: Colors.blue),
+                            onPressed: () => Scaffold.of(context).openEndDrawer(),
+                          ),
                         ),
                       ],
                     ),
@@ -170,7 +229,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       percent: calorieGoal > 0
                           ? (consumedCalories / calorieGoal).clamp(0.0, 1.0)
                           : 0.0,
-
                       center: Text(
                         "$consumedCalories / $calorieGoal\nkcal",
                         textAlign: TextAlign.center,
@@ -204,6 +262,24 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Column(
+                          children: [
+                            const Text('Núverandi þyngd'),
+                            Text('${currentWeight.toStringAsFixed(1)} kg'),
+                          ],
+                        ),
+                        Column(
+                          children: [
+                            const Text('Markmið þyngd'),
+                            Text('${targetWeight.toStringAsFixed(1)} kg'),
+                          ],
+                        ),
+                      ],
+                    ),
                     const Spacer(),
                     SizedBox(
                       width: double.infinity,
@@ -214,7 +290,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             MaterialPageRoute(builder: (context) => const AddFoodScreen()),
                           );
                           if (result == true) {
-                            _loadTodaysTotals(); // Refresh after food is added
+                            _loadTodaysTotals();
                           }
                         },
                         style: ElevatedButton.styleFrom(

@@ -106,7 +106,6 @@ class _AddFoodScreenState extends State<AddFoodScreen> with SingleTickerProvider
         _hasTyped = false;
       });
 
-      print("Triggering cart animation...");
       _cartController.forward(from: 0.8);
 
       setState(() {
